@@ -1,0 +1,216 @@
+METADATA DATASET IFLS - AKSES INTERNET
+======================================
+
+Nama file data yang dijelaskan:
+data_ifls_akses_internet.csv
+
+Script pembentuk data:
+build_data_ifls_akses_internet.py
+
+Tanggal update metadata:
+8 Juni 2026
+
+
+1. Tentang dataset
+------------------
+Dataset ini merupakan data individu dari IFLS5 tahun 2014 yang disiapkan untuk
+analisis akses internet. Unit observasi adalah individu/responden, bukan rumah
+tangga. Setiap baris mewakili satu individu yang memiliki kunci unik:
+
+- hhid14: ID rumah tangga IFLS 2014
+- pid14: ID individu dalam rumah tangga IFLS 2014
+
+Variabel respon utama adalah akses_internet, yaitu apakah responden memiliki
+akses internet. Variabel penjelas berisi karakteristik demografi, pendidikan,
+literasi, kepemilikan telepon seluler, aktivitas utama, dan kondisi ekonomi
+subjektif.
+
+Dataset final memiliki:
+- Jumlah observasi: 31431 baris
+- Jumlah kolom: 13 kolom
+- Duplikasi hhid14 + pid14: 0
+- Missing value pada data final: 0
+- Variabel numerik: usia, skor_ekonomi_subjektif
+- Variabel kategorik/biner: akses_internet dan variabel penjelas lainnya
+
+
+2. Sumber file IFLS
+-------------------
+Dataset dibentuk dari beberapa file .dta dalam folder hh14_b3a_dta:
+
+- hh14_b3a_dta/b3a_cov.dta
+  Sumber variabel identitas individu, usia, jenis kelamin, dan status
+  perkawinan.
+
+- hh14_b3a_dta/b3a_dl1.dta
+  Sumber variabel akses internet, kemampuan membaca koran, kepemilikan telepon
+  seluler, dan pendidikan.
+
+- hh14_b3a_dta/b3a_tk1.dta
+  Sumber variabel aktivitas utama responden selama seminggu terakhir.
+
+- hh14_b3a_dta/b3a_sw.dta
+  Sumber variabel ekonomi subjektif, yaitu posisi ekonomi responden menurut
+  penilaian responden sendiri.
+
+
+3. Proses pembentukan data
+--------------------------
+Langkah pembentukan dataset:
+
+1. Membaca kolom yang dibutuhkan dari file IFLS sumber.
+2. Menyamakan format hhid14 menjadi 7 digit agar leading zero tidak hilang.
+3. Memastikan setiap file sumber tidak memiliki duplikasi kunci hhid14 + pid14.
+4. Menggabungkan data individu dengan kunci hhid14 + pid14.
+5. Melakukan recoding variabel mentah IFLS menjadi variabel analisis.
+6. Menghapus baris yang masih memiliki missing value pada variabel model.
+7. Menyimpan hasil akhir ke data_ifls_akses_internet.csv.
+
+Catatan:
+- Kode khusus seperti Don't Know/Missing pada variabel ya/tidak tidak dimasukkan
+  ke data final.
+- Dataset akhir sudah complete-case, sehingga tidak ada missing value.
+
+
+4. Daftar variabel
+------------------
+
+hhid14
+- Tentang: ID rumah tangga IFLS 2014.
+- Jenis: identitas.
+- Sumber: hh14_b3a_dta/b3a_cov.dta, kolom hhid14.
+- Pembentukan: dikonversi menjadi string 7 digit agar nol di depan tetap
+  tersimpan.
+
+pid14
+- Tentang: ID individu/responden dalam rumah tangga IFLS 2014.
+- Jenis: identitas.
+- Sumber: hh14_b3a_dta/b3a_cov.dta, kolom pid14.
+- Pembentukan: digunakan langsung dari data sumber.
+
+akses_internet
+- Tentang: apakah responden memiliki akses internet.
+- Jenis: respon biner.
+- Sumber: hh14_b3a_dta/b3a_dl1.dta, kolom dl03d.
+- Pertanyaan sumber: Do you have internet access?
+- Pembentukan:
+  - dl03d = 1 menjadi 1, artinya memiliki akses internet.
+  - dl03d = 3 menjadi 0, artinya tidak memiliki akses internet.
+  - kode 8/9 atau missing tidak dimasukkan dalam data final.
+
+usia
+- Tentang: usia responden dalam tahun.
+- Jenis: numerik.
+- Sumber: hh14_b3a_dta/b3a_cov.dta, kolom age.
+- Pertanyaan sumber: How old are you?
+- Pembentukan: digunakan sebagai nilai numerik asli dari data sumber.
+- Ringkasan data final: minimum 15 tahun, maksimum 101 tahun, rata-rata sekitar
+  37,29 tahun.
+
+skor_ekonomi_subjektif
+- Tentang: posisi ekonomi subjektif responden pada tangga ekonomi.
+- Jenis: numerik ordinal.
+- Sumber: hh14_b3a_dta/b3a_sw.dta, kolom sw01.
+- Pertanyaan sumber: On which economic step do you consider yourself today?
+- Pembentukan:
+  - sw01 = 1 sampai 6 digunakan sebagai skor numerik.
+  - 1 berarti posisi ekonomi paling rendah/poorest.
+  - 6 berarti posisi ekonomi paling tinggi/richest.
+  - kode 8/9 atau missing tidak dimasukkan dalam data final.
+
+kelompok_usia
+- Tentang: kelompok umur responden.
+- Jenis: kategorik ordinal.
+- Sumber: dihitung dari hh14_b3a_dta/b3a_cov.dta, kolom age.
+- Pembentukan:
+  - 15-24 tahun jika usia 15 sampai 24
+  - 25-34 tahun jika usia 25 sampai 34
+  - 35-44 tahun jika usia 35 sampai 44
+  - 45-54 tahun jika usia 45 sampai 54
+  - >=55 tahun jika usia 55 atau lebih
+
+jenis_kelamin
+- Tentang: jenis kelamin responden.
+- Jenis: kategorik nominal.
+- Sumber: hh14_b3a_dta/b3a_cov.dta, kolom sex.
+- Pembentukan:
+  - sex = 1 menjadi Laki-laki
+  - sex = 3 menjadi Perempuan
+
+status_perkawinan
+- Tentang: status perkawinan responden.
+- Jenis: kategorik nominal.
+- Sumber: hh14_b3a_dta/b3a_cov.dta, kolom marstat.
+- Pembentukan:
+  - marstat = 1 menjadi Belum menikah
+  - marstat = 2 atau 6 menjadi Menikah/berpasangan
+  - marstat = 3, 4, atau 5 menjadi Pernah menikah
+
+pendidikan
+- Tentang: tingkat pendidikan tertinggi/yang pernah diikuti responden.
+- Jenis: kategorik ordinal.
+- Sumber: hh14_b3a_dta/b3a_dl1.dta, kolom dl04 dan dl06.
+- Pembentukan:
+  - dl04 = 3 menjadi Tidak pernah sekolah
+  - dl06 = 2, 11, 72 menjadi SD/sederajat
+  - dl06 = 3, 4, 12, 14, 73 menjadi SMP/sederajat
+  - dl06 = 5, 6, 15, 74 menjadi SMA/sederajat
+  - dl06 = 13, 60, 61, 62, 63 menjadi Perguruan tinggi
+
+mampu_baca_koran
+- Tentang: kemampuan responden membaca koran berbahasa Indonesia.
+- Jenis: kategorik biner.
+- Sumber: hh14_b3a_dta/b3a_dl1.dta, kolom dl02.
+- Pertanyaan sumber: Can you read an Indonesian-language newspaper?
+- Pembentukan:
+  - dl02 = 1 menjadi Ya
+  - dl02 = 3 menjadi Tidak
+  - kode 8/9 atau missing tidak dimasukkan dalam data final.
+
+punya_telepon_seluler
+- Tentang: kepemilikan telepon seluler oleh responden.
+- Jenis: kategorik biner.
+- Sumber: hh14_b3a_dta/b3a_dl1.dta, kolom dl03b.
+- Pertanyaan sumber: Do you have cell phone?
+- Pembentukan:
+  - dl03b = 1 menjadi Ya
+  - dl03b = 3 menjadi Tidak
+  - kode 8/9 atau missing tidak dimasukkan dalam data final.
+
+aktivitas_utama
+- Tentang: aktivitas utama responden selama seminggu terakhir.
+- Jenis: kategorik nominal.
+- Sumber: hh14_b3a_dta/b3a_tk1.dta, kolom tk01.
+- Pertanyaan sumber: Primary activity during past week.
+- Pembentukan:
+  - tk01 = 1 menjadi Bekerja
+  - tk01 = 3 menjadi Bersekolah
+  - tk01 = 4 menjadi Mengurus rumah tangga
+  - tk01 = 2, 5, 7, 95 menjadi Lainnya/tidak bekerja
+
+ekonomi_subjektif
+- Tentang: kategori kondisi ekonomi subjektif responden.
+- Jenis: kategorik ordinal.
+- Sumber: dihitung dari hh14_b3a_dta/b3a_sw.dta, kolom sw01.
+- Pembentukan:
+  - sw01 = 1 atau 2 menjadi Rendah
+  - sw01 = 3 menjadi Menengah
+  - sw01 = 4, 5, atau 6 menjadi Tinggi
+
+
+5. Catatan penggunaan untuk analisis
+------------------------------------
+Dataset ini cocok untuk analisis data kategorik, terutama regresi logistik
+biner dengan akses_internet sebagai variabel respon.
+
+Contoh interpretasi variabel respon:
+- akses_internet = 1 berarti responden memiliki akses internet.
+- akses_internet = 0 berarti responden tidak memiliki akses internet.
+
+Catatan pemodelan:
+- Jika memakai usia sebagai prediktor numerik, sebaiknya tidak sekaligus memakai
+  kelompok_usia dalam model yang sama karena keduanya berasal dari informasi
+  yang sama.
+- Jika memakai skor_ekonomi_subjektif sebagai prediktor numerik/ordinal,
+  sebaiknya tidak sekaligus memakai ekonomi_subjektif dalam model yang sama
+  karena keduanya berasal dari kolom sumber yang sama, yaitu sw01.
